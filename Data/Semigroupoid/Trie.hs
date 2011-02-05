@@ -50,7 +50,7 @@ instance Functor (Entry a) where
 runT :: (a :->: b) -> Trie a b
 runT (T f) = f
 
-instance Index ((:->:)e) where
+instance Indexable ((:->:)e) where
   index (T f) = untrie f
 
 instance HasTrie e => Distributive ((:->:)e) where
@@ -100,7 +100,7 @@ instance Ord b => Ord (a :->: b) where
   compare = compare `on` toList
 
 instance (Show a, Show b) => Show (a :->: b) where 
-  showsPrec d t = showsPrec d (toIndexedList t)
+  showsPrec d t = showsPrec d (toKeyedList t)
 
 instance Apply ((:->:) a) where
   T f <.> T g = T (f <.> g)
