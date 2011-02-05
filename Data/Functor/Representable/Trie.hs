@@ -19,7 +19,6 @@ module Data.Functor.Representable.Trie
   , mup, memo, memo2, memo3
   , inTrie, inTrie2, inTrie3
   -- * Workarounds for current GHC limitations
-  , (:=)(..)
   , trie, untrie
   , coerceKey, uncoerceKey
   ) where
