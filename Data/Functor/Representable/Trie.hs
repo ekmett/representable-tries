@@ -25,12 +25,11 @@ module Data.Functor.Representable.Trie
   ) where
 
 import Control.Monad.Representable
+import Data.Eq.Type
 import Data.Functor.Identity
 import Data.Functor.Product
 import Data.Key
 import Prelude hiding (lookup)
-
-data a := b where Refl :: a := a
 
 -- class (TraversableWithKey1 (Trie a), Representable (Trie a), Key (Trie a) ~ a) => HasTrie a where
 class (TraversableWithKey1 (Trie a), Representable (Trie a)) => HasTrie a where
