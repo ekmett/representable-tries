@@ -19,27 +19,23 @@ module Data.Semigroupoid.Trie
   ) where
 
 import Control.Applicative
-import Control.Arrow (first,(&&&))
 import Control.Comonad
 import Control.Monad.Representable
 import Control.Monad.Reader
 import Control.Monad.Reader.Trie
-import Data.Bits
 import Data.Distributive
 import Data.Function (on)
 import Data.Functor.Adjunction
+import Data.Functor.Representable
 import Data.Functor.Bind
 import Data.Foldable
-import Data.Int
 import Data.Key
 import Data.Monoid
 import Data.Traversable
-import Data.Semigroup
 import Data.Semigroup.Traversable
 import Data.Semigroup.Foldable
 import Data.Semigroupoid
 -- import Data.Semigroupoid.Ob
-import Data.Word
 
 data a :->: b where
   T :: HasTrie a => Trie a b -> a :->: b
@@ -126,7 +122,7 @@ instance Bind ((:->:) a) where
   T m >>- f = T (tabulate (\a -> index (runT (f (index m a))) a))
   
 instance HasTrie a => Monad ((:->:) a) where
-  return a = T (return a)
+  return a = T (pureRep a)
   (>>=) = (>>-)
   _ >> m = m
 

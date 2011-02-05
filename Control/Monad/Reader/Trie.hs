@@ -28,29 +28,21 @@ module Control.Monad.Reader.Trie
   ) where
 
 import Control.Applicative
-import Control.Arrow (first,(&&&))
 import Control.Comonad
 import Control.Monad.Trans.Class
-import Control.Monad.Trans.Reader
-import Control.Monad.Trans.Identity
 import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
 import Control.Monad.Representable
 import Control.Monad.Writer.Class as Writer
-import Data.Bits
 import Data.Distributive
-import Data.Int
-import Data.Function (on)
 import Data.Functor.Bind
 import Data.Functor.Identity
 import Data.Foldable
 import Data.Key
 import Data.Monoid
 import Data.Traversable
-import Data.Semigroup
 import Data.Semigroup.Foldable
 import Data.Semigroup.Traversable
-import Data.Word
 import Prelude hiding (lookup)
 
 data a := b where Refl :: a := a
