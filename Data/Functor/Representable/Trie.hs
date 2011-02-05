@@ -27,6 +27,8 @@ import Control.Monad.Representable
 import Data.Eq.Type
 import Data.Functor.Identity
 import Data.Functor.Product
+import Data.Functor.Representable.Trie.Bool
+import Data.Functor.Representable.Trie.List
 import Data.Key
 import Prelude hiding (lookup)
 
@@ -110,6 +112,10 @@ instance HasTrie () where
   type Trie () = Identity
   keyRefl = Refl
 
+instance HasTrie Bool where
+  type Trie Bool = BoolTrie
+  keyRefl = Refl
+
 instance (HasTrie a, HasTrie b) => HasTrie (a, b) where
   type Trie (a, b) = RepT (Trie a) (Trie b)
   keyRefl = go keyRefl keyRefl where
@@ -121,3 +127,9 @@ instance (HasTrie a, HasTrie b) => HasTrie (Either a b) where
   keyRefl = go keyRefl keyRefl where
     go :: (a := Key (Trie a)) -> (b := Key (Trie b)) -> Either a b := Key (Trie (Either a b))
     go Refl Refl = Refl
+
+instance HasTrie a => HasTrie [a] where
+  type Trie [a] = ListTrie (Trie a)
+  keyRefl = go keyRefl where
+    go :: (a := Key (Trie a)) -> [a] := Key (Trie [a])
+    go Refl = Refl

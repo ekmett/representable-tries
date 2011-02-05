@@ -1,6 +1,6 @@
 name:          representable-tries
 category:      Data Structures, Functors, Monads, Comonads
-version:       0.2.2
+version:       0.2.3
 license:       BSD3
 cabal-version: >= 1.6
 license-file:  LICENSE
@@ -38,6 +38,8 @@ library
   exposed-modules:
     Control.Monad.Reader.Trie
     Data.Functor.Representable.Trie
+    Data.Functor.Representable.Trie.Bool
+    Data.Functor.Representable.Trie.List
     Data.Semigroupoid.Trie
 
   ghc-options: -Wall
