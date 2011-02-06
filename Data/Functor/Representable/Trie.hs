@@ -63,6 +63,10 @@ class (TraversableWithKey1 (BaseTrie a), Representable (BaseTrie a)) => HasTrie 
   -- projectKey . embedKey = id
   embedKey   :: a -> Key (BaseTrie a)
   projectKey :: Key (BaseTrie a) -> a
+{-
+  validKey   :: Key (BaseTrie a) -> Bool
+  validKey _ = True
+-}
 
 data a :->: b where
   Trie :: HasTrie a => BaseTrie a b -> a :->: b
@@ -185,7 +189,7 @@ instance Ord b => Ord (a :->: b) where
   compare = compare `on` toList
 
 instance (Show a, Show b) => Show (a :->: b) where 
-  showsPrec d t = showsPrec d (toKeyedList t)
+  showsPrec d = showsPrec d . toKeyedList
 
 instance Apply ((:->:) a) where
   Trie f <.> Trie g = Trie (f <.> g)
@@ -294,7 +298,7 @@ instance (HasTrie v) => HasTrie (IntMap v) where
   type BaseTrie (IntMap v) = ListTrie (BaseTrie (Int, v))
   embedKey = foldrWithKey (\k v t -> embedKey (k,v) : t) []
   projectKey = IntMap.fromDistinctAscList . map projectKey
-  
+
   
 -- | Extract bits in little-endian order
 bits :: Bits t => t -> [Bool]
@@ -320,15 +324,17 @@ unbitsZ (positive,bs) = sig (unbits bs)
 bitsZ :: (Ord n, Bits n) => n -> (Bool,[Bool])
 bitsZ = (>= 0) &&& (bits . abs)
 
+-- TODO: fix the show instance of this
 instance HasTrie Int where
   type BaseTrie Int = BaseTrie (Bool, [Bool])
   embedKey = embedKey . bitsZ 
   projectKey = unbitsZ . projectKey
 
+-- TODO: fix tree to 21 bit depth
 instance HasTrie Char where
-  type BaseTrie Char = BaseTrie Int
-  embedKey = embedKey . fromEnum
-  projectKey = toEnum . projectKey
+  type BaseTrie Char = BaseTrie [Bool]
+  embedKey = bits . fromEnum
+  projectKey = toEnum . unbits
 
 instance (HasTrie a, HasTrie b, HasTrie c) => HasTrie (a,b,c) where
   type BaseTrie (a,b,c) = BaseTrie (a,(b,c))

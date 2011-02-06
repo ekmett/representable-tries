@@ -37,6 +37,9 @@ library
     Data.Functor.Representable.Trie
     Data.Functor.Representable.Trie.Bool
     Data.Functor.Representable.Trie.List
+    Data.Functor.Representable.Trie.Either
     Data.Traversable.Fair
+    Data.Vector.Fixed
+    Numeric.Nat
 
   ghc-options: -Wall
