@@ -311,16 +311,24 @@ unbits :: Bits t => [Bool] -> t
 unbits [] = 0
 unbits (x:xs) = unbit x .|. shiftL (unbits xs) 1
 
+unbitsZ :: (Bits n) => (Bool,[Bool]) -> n
+unbitsZ (positive,bs) = sig (unbits bs)
+ where
+   sig | positive  = id
+       | otherwise = negate
+
+bitsZ :: (Ord n, Bits n) => n -> (Bool,[Bool])
+bitsZ = (>= 0) &&& (bits . abs)
 
 instance HasTrie Int where
-  type BaseTrie Int = ListTrie BoolTrie
-  embedKey = bits
-  projectKey = unbits
+  type BaseTrie Int = BaseTrie (Bool, [Bool])
+  embedKey = embedKey . bitsZ 
+  projectKey = unbitsZ . projectKey
 
 instance HasTrie Char where
   type BaseTrie Char = BaseTrie Int
-  embedKey = bits . fromEnum
-  projectKey = toEnum . unbits
+  embedKey = embedKey . fromEnum
+  projectKey = toEnum . projectKey
 
 instance (HasTrie a, HasTrie b, HasTrie c) => HasTrie (a,b,c) where
   type BaseTrie (a,b,c) = BaseTrie (a,(b,c))
