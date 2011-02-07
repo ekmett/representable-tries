@@ -16,7 +16,7 @@ module Data.Vector.Zeroless
   , (<|) 
   , NonEmpty(tail,head,uncons)
   , size
-  , 
+  ) where
 
 import Control.Applicative
 import Data.Distributive
@@ -124,36 +124,42 @@ size (V2 _ _ t) = 2 * size t + 2
 
 instance Functor (Vector n) where
   fmap _ V0 = V0
-  fmap f (V1 a x y)   = V1 (f a) (fmap f x) (fmap f y)
-  fmap f (V2 a b x y) = V2 (f a) (f b) (fmap f x) (fmap f y)
+  fmap f (V1 a t)   = V1 (f a) $ fmap (f *** f) t
+  fmap f (V2 a b t) = V2 (f a) (f b) $ fmap (f *** f) t
+  _ <$ V0 = V0
+  b <$ V1 _ t = V1 b $ (b,b) <$ t
+  b <$ V2 _ _ t = V2 b b $ (b,b) <$ t
 
 instance Apply (Vector n) where
   V0 <.> V0 = V0
-  V1 a s <.> V1 b t = V1 (a b) (\(w,x) (y,z) -> (w y, x z) <$> s <.> t)
-  V2 a b s <.> V2 c d t = V2 (a b) (c d) (\(w,x) (y,z) -> (w y, x z) <$> s <.> t)
+  V1 a s <.> V1 b t = V1 (a b) $ (\(w,x) (y,z) -> (w y, x z)) <$> s <.> t
+  V2 a b s <.> V2 c d t = V2 (a b) (c d) $ (\(w,x) (y,z) -> (w y, x z)) <$> s <.> t
+  a <. _ = a
+  _ .> a = a
 
 instance Representable (Vector n) => Applicative (Vector n) where
   V0 <*> V0 = V0
-  V1 a s <*> V1 b t = V1 (a b) (\(w,x) (y,z) -> (w y, x z) <$> s <*> t)
-  V2 a b s <*> V2 c d t = V2 (a b) (c d) (\(w,x) (y,z) -> (w y, x z) <$> s <*> t)
+  V1 a s <*> V1 b t = V1 (a b) $ (\(w,x) (y,z) -> (w y, x z)) <$> s <*> t
+  V2 a b s <*> V2 c d t = V2 (a b) (c d) $ (\(w,x) (y,z) -> (w y, x z)) <$> s <*> t
+  a <* _ = a
+  _ *> a = a
 
 instance Representable (Vector n) => Bind (Vector n) where
   (>>-) = bindRep
 
 instance Representable (Vector n) => Monad (Vector n) where
   (>>=) = bindRep
+  _ >> a = a
   
 instance Keyed (Vector n) where
   mapWithKey _ V0 = V0
-  mapWithKey f (V1 n a x y) = V1 n (f (Fin 0) a) 
-    (mapWithKey (f . Fin . (+1) . getFin) x)
-    (mapWithKey (f . Fin . (+1+n) . getFin) y)
-  mapWithKey f (V2 n a b x y) = V2 n (f (Fin 0) a) (f (Fin 1) b)
-    (mapWithKey (f . Fin . (+2) . getFin) x)
-    (mapWithKey (f . Fin . (+2+n) . getFin) y)
+  mapWithKey f (V1 a t) = V1 (f (Fin 0) a) $
+    mapWithKey (\k (l,r) -> (f (2*k+1) l, f (2*k+2) r)) t
+  mapWithKey f (V2 a b t) = V2 (f (Fin 0) a) (f (Fin 1) b) $ 
+    mapWithKey (\k (l,r) -> (f (2*k+2) l, f (2*k+3) r)) t
 
 instance Indexable (Vector n) where
-  index (V1 a t) (Fin 0) = a
+  index (V1 a _) (Fin 0) = a
   index (V1 a t@V1{}) (Fin n) = case quotRem (n - 1) of
     (q,0) -> fst (index t (Fin q))
     (q,_) -> snd (index t (Fin q))
@@ -178,8 +184,8 @@ instance Adjustable (Vector n) where
 
 instance Foldable (Vector n) where
   foldMap _ V0 = mempty
-  foldMap f (V1 a t) = f a `mappend` foldMap (\(l,r)uncurry (mappend `on` f)) t
-  foldMap f (V2 a b t) = f a `mappend` f b `mappend` foldMap (bifoldMap f f) t 
+  foldMap f (V1 a t) = f a `mappend` foldMap (\(l,r) -> f l `mappend` f r) t
+  foldMap f (V2 a b t) = f a `mappend` f b `mappend` foldMap (\(l, r) -> f l `mappend` f r) t 
 
 instance NonEmpty n => Foldable1 (Vector n) where
   foldMap1 = foldMap1' 
