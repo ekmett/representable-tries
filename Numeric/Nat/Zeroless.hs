@@ -12,8 +12,10 @@
 ----------------------------------------------------------------------
 
 module Numeric.Nat.Zeroless
-  ( D0, D1, D2, (:+:), (:*:), Zeroless(..), fromNat
-  , N8, N16, N32, N64
+  ( D0, D1, D2, (:+:), (:*:), Zeroless(..)
+  , Succ, Pred
+  , N1, N8, N16, N32, N64
+  , Nat(..), nat 
   , Fin(..)
   ) where
 
@@ -52,6 +54,12 @@ type family Succ n
 type instance Succ D0 = D1 D0
 type instance Succ (D1 n) = D2 n
 type instance Succ (D2 n) = D1 (Succ n)
+
+type family Pred n
+type instance Pred (D1 D0) = D0
+type instance Pred (D1 (D1 n)) = D2 (Pred (D1 n))
+type instance Pred (D1 (D2 n)) = D2 (D1 n)
+type instance Pred (D2 n) = D1 n
 
 -- * Carry flags
 data C0
