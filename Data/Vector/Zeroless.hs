@@ -18,21 +18,20 @@ module Data.Vector.Zeroless
   , size
   ) where
 
+import Control.Arrow
 import Control.Applicative
 import Data.Distributive
 import Data.Functor.Representable
 import Data.Functor.Bind
 import Data.Foldable
-import Data.Bifoldable
-import Data.Function (on)
 import Data.Monoid
 import Data.Traversable
-import Data.Bitraversable
 import Data.Semigroup
 import Data.Semigroup.Foldable
 import Data.Semigroup.Traversable
 import Data.Key
-import Prelude hiding (lookup)
+import Numeric.Nat.Zeroless
+import Prelude hiding (lookup, tail, head)
 
 -- each vector memoizes the size of its _child_ vectors for efficiency
 data Vector n a where
@@ -42,16 +41,16 @@ data Vector n a where
 
 infixr 5 <|
 
-type Key (Vector n) = Fin n
+type instance Key (Vector n) = Fin n
 
 (<|) :: a -> Vector n a -> Vector (Succ n) a
-a <| V0 = V1 a V0 V0
+a <| V0 = V1 a V0
 a <| V1 b t = V2 a b t
 a <| V2 b c t = V1 a ((b,c) <| t)
 
 class NonEmpty n where
-  tail :: Vector n a -> Vector (Pred n) a)
-  uncons :: Vector n a -> (a, Vector n a)
+  tail :: Vector n a -> Vector (Pred n) a
+  uncons :: Vector n a -> (a, Vector (Pred n) a)
   head :: Vector n a -> a
 
   foldMap1' :: Semigroup m => (a -> m) -> Vector n a -> m
@@ -82,13 +81,13 @@ instance NonEmpty (D1 n) where
     
   foldMapWithKey1' f (V1 a t) = case t of
     V0 -> f (Fin 0) a
-    V1{} -> f (Fin 0) a <> foldMapWithKey1' (\k (l,r) -> f (Fin (2*k+1)) l <> f (Fin (2*k+2)) r) t
-    V2{} -> f (Fin 0) a <> foldMapWithKey1' (\k (l,r) -> f (Fin (2*k+1)) l <> f (Fin (2*k+2)) r) t
+    V1{} -> f (Fin 0) a <> foldMapWithKey1' (\(Fin k) (l,r) -> f (Fin (2*k+1)) l <> f (Fin (2*k+2)) r) t
+    V2{} -> f (Fin 0) a <> foldMapWithKey1' (\(Fin k) (l,r) -> f (Fin (2*k+1)) l <> f (Fin (2*k+2)) r) t
 
   traverseWithKey1' f (V1 a t) = case t of
     V0 -> flip V1 V0 <$> f 0 a
-    V1{} -> V1 <$> f (Fin 0) a <.> traverseWithKey1' (\k (l,r) -> (,) <$> f (Fin (2*k+1)) l <.> f (Fin (2*k+2)) r) t
-    V2{} -> V1 <$> f (Fin 0) a <.> traverseWithKey1' (\k (l,r) -> (,) <$> f (Fin (2*k+1)) l <.> f (Fin (2*k+2)) r) t
+    V1{} -> V1 <$> f (Fin 0) a <.> traverseWithKey1' (\(Fin k) (l,r) -> (,) <$> f (Fin (2*k+1)) l <.> f (Fin (2*k+2)) r) t
+    V2{} -> V1 <$> f (Fin 0) a <.> traverseWithKey1' (\(Fin k) (l,r) -> (,) <$> f (Fin (2*k+1)) l <.> f (Fin (2*k+2)) r) t
 
 instance NonEmpty (D2 n) where
   tail (V2 _ b t) = V1 b t
@@ -103,19 +102,19 @@ instance NonEmpty (D2 n) where
     V2{} -> f a <> f b <> foldMap1' (\(l,r) -> f l <> f r) t
 
   traverse1' f (V2 a b t) = case t of
-    V0   -> (\x y -> V2 a b V0) <$> f a <.> f b
-    V1{} -> V1 <$> f a <.> f b <.> traverse1' (\(l,r) -> (,) <$> f l <.> f r) t
-    V2{} -> V1 <$> f a <.> f b <.> traverse1' (\(l,r) -> (,) <$> f l <.> f r) t
+    V0   -> (\x y -> V2 x y V0) <$> f a <.> f b
+    V1{} -> V2 <$> f a <.> f b <.> traverse1' (\(l,r) -> (,) <$> f l <.> f r) t
+    V2{} -> V2 <$> f a <.> f b <.> traverse1' (\(l,r) -> (,) <$> f l <.> f r) t
 
   foldMapWithKey1' f (V2 a b t) = case t of
     V0 -> f (Fin 0) a <> f (Fin 1) b
-    V1{} -> f (Fin 0) a <> f (Fin 1) b <> foldMapWithKey1' (\k (l,r) -> f (Fin (2*k+1)) l <> f (Fin (2*k+2)) r) t
-    V2{} -> f (Fin 0) a <> f (Fin 1) b <> foldMapWithKey1' (\k (l,r) -> f (Fin (2*k+1)) l <> f (Fin (2*k+2)) r) t
+    V1{} -> f (Fin 0) a <> f (Fin 1) b <> foldMapWithKey1' (\(Fin k) (l,r) -> f (Fin (2*k+1)) l <> f (Fin (2*k+2)) r) t
+    V2{} -> f (Fin 0) a <> f (Fin 1) b <> foldMapWithKey1' (\(Fin k) (l,r) -> f (Fin (2*k+1)) l <> f (Fin (2*k+2)) r) t
 
   traverseWithKey1' f (V2 a b t) = case t of
-    V0 -> (\x y -> V2 a b V0) <$> f (Fin 0) a <.> f (Fin 1) a
-    V1{} -> V1 <$> f (Fin 0) a <.> f (Fin 1) b <.> traverseWithKey1' (\(Fin k) (l,r) -> (,) <$> f (Fin (2*k+2)) l <.> f (Fin (2*k+3)) r) t
-    V2{} -> V1 <$> f (Fin 0) a <.> f (Fin 1) b <.> traverseWithKey1' (\k (l,r) -> (,) <$> f (Fin (2*k+2)) l <.> f (Fin (2*k+3)) r) t
+    V0 -> (\x y -> V2 x y V0) <$> f (Fin 0) a <.> f (Fin 1) a
+    V1{} -> V2 <$> f (Fin 0) a <.> f (Fin 1) b <.> traverseWithKey1' (\(Fin k) (l,r) -> (,) <$> f (Fin (2*k+2)) l <.> f (Fin (2*k+3)) r) t
+    V2{} -> V2 <$> f (Fin 0) a <.> f (Fin 1) b <.> traverseWithKey1' (\(Fin k) (l,r) -> (,) <$> f (Fin (2*k+2)) l <.> f (Fin (2*k+3)) r) t
 
 size :: Vector n a -> Int
 size V0 = 0 
@@ -133,39 +132,53 @@ instance Functor (Vector n) where
 instance Apply (Vector n) where
   V0 <.> V0 = V0
   V1 a s <.> V1 b t = V1 (a b) $ (\(w,x) (y,z) -> (w y, x z)) <$> s <.> t
-  V2 a b s <.> V2 c d t = V2 (a b) (c d) $ (\(w,x) (y,z) -> (w y, x z)) <$> s <.> t
+  V2 a b s <.> V2 c d t = V2 (a c) (b d) $ (\(w,x) (y,z) -> (w y, x z)) <$> s <.> t
+  _ <.> _ = error "GADT fail"
   a <. _ = a
   _ .> a = a
 
-instance Representable (Vector n) => Applicative (Vector n) where
+instance Applicative (Vector D0) where
+  pure _ = V0
   V0 <*> V0 = V0
-  V1 a s <*> V1 b t = V1 (a b) $ (\(w,x) (y,z) -> (w y, x z)) <$> s <*> t
-  V2 a b s <*> V2 c d t = V2 (a b) (c d) $ (\(w,x) (y,z) -> (w y, x z)) <$> s <*> t
   a <* _ = a
   _ *> a = a
 
+instance Applicative (Vector n) => Applicative (Vector (D1 n)) where
+  pure a = V1 a $ pure (a,a)
+  V1 a s <*> V1 b t = V1 (a b) $ (\(w,x) (y,z) -> (w y, x z)) <$> s <*> t
+  a <* _ = a
+  _ *> a = a
+
+instance Applicative (Vector n) => Applicative (Vector (D2 n)) where
+  pure a = V2 a a $ pure (a,a)
+  V2 a b s <*> V2 c d t = V2 (a c) (b d) $ (\(w,x) (y,z) -> (w y, x z)) <$> s <*> t
+  a <* _ = a
+  _ *> a = a
+
+{-
 instance Representable (Vector n) => Bind (Vector n) where
   (>>-) = bindRep
 
 instance Representable (Vector n) => Monad (Vector n) where
   (>>=) = bindRep
   _ >> a = a
+-}
   
 instance Keyed (Vector n) where
   mapWithKey _ V0 = V0
   mapWithKey f (V1 a t) = V1 (f (Fin 0) a) $
-    mapWithKey (\k (l,r) -> (f (2*k+1) l, f (2*k+2) r)) t
+    mapWithKey (\(Fin k) (l,r) -> (f (Fin (2*k+1)) l, f (Fin (2*k+2)) r)) t
   mapWithKey f (V2 a b t) = V2 (f (Fin 0) a) (f (Fin 1) b) $ 
-    mapWithKey (\k (l,r) -> (f (2*k+2) l, f (2*k+3) r)) t
+    mapWithKey (\(Fin k) (l,r) -> (f (Fin (2*k+2)) l, f (Fin (2*k+3)) r)) t
 
 instance Indexable (Vector n) where
   index (V1 a _) (Fin 0) = a
-  index (V1 a t@V1{}) (Fin n) = case quotRem (n - 1) of
+  index (V1 _ t) (Fin n) = case quotRem (n - 1) 2 of
     (q,0) -> fst (index t (Fin q))
     (q,_) -> snd (index t (Fin q))
   index (V2 a _ _) (Fin 0) = a
   index (V2 _ b _) (Fin 1) = b
-  index (V2 _ _ t) (Fin n) = case quotRem (n - 2) of
+  index (V2 _ _ t) (Fin n) = case quotRem (n - 2) 2 of
     (q,0) -> fst (index t (Fin q))
     (q,_) -> snd (index t (Fin q))
   index _ _ = error "index: illegal"
@@ -173,12 +186,12 @@ instance Indexable (Vector n) where
 instance Adjustable (Vector n) where
   adjust _ _ V0 = V0
   adjust f (Fin 0) (V1 a t) = V1 (f a) t
-  adjust f (Fin n) (V1 a t) = case quotRem (n - 1) of
+  adjust f (Fin n) (V1 a t) = case quotRem (n - 1) 2 of
     (q,0) -> V1 a (adjust (first f) (Fin q) t)
     (q,_) -> V1 a (adjust (second f) (Fin q) t)
-  adjust f (Fin 0) (V2 a b t) = V1 (f a) b t
-  adjust f (Fin 1) (V2 a b t) = V1 a (f b) t
-  adjust f (Fin n) (V2 a b t) = case quotRem (n - 2) of
+  adjust f (Fin 0) (V2 a b t) = V2 (f a) b t
+  adjust f (Fin 1) (V2 a b t) = V2 a (f b) t
+  adjust f (Fin n) (V2 a b t) = case quotRem (n - 2) 2 of
     (q,0) -> V2 a b (adjust (first f) (Fin q) t)
     (q,_) -> V2 a b (adjust (second f) (Fin q) t)
 
@@ -199,17 +212,17 @@ instance NonEmpty n => Traversable1 (Vector n) where
   traverse1 = traverse1'
 
 instance FoldableWithKey (Vector n) where
-  foldMapWithKey _ V0 = pure V0
-  foldMapWithKey f (V1 a t) = f (Fin 0) a <> foldMapWithKey (\k (l,r) -> f (Fin (2*k+1)) l <> f (Fin (2*k+2)) r) t
-  foldMapWithKey f (V2 a b t) = f (Fin 0) a <> f (Fin 1) b <> foldMapWithKey (\k (l,r) -> f (Fin (2*k+2)) l <> f (Fin (2*k+3)) r) t
+  foldMapWithKey _ V0 = mempty
+  foldMapWithKey f (V1 a t) = f (Fin 0) a `mappend` foldMapWithKey (\(Fin k) (l,r) -> f (Fin (2*k+1)) l `mappend` f (Fin (2*k+2)) r) t
+  foldMapWithKey f (V2 a b t) = f (Fin 0) a `mappend` f (Fin 1) b `mappend` foldMapWithKey (\(Fin k) (l,r) -> f (Fin (2*k+2)) l `mappend` f (Fin (2*k+3)) r) t
 
 instance NonEmpty n => FoldableWithKey1 (Vector n) where
   foldMapWithKey1 = foldMapWithKey1'
 
 instance TraversableWithKey (Vector n) where
   traverseWithKey _ V0 = pure V0
-  traverseWithKey f (V1 a t) = V1 <$> f (Fin 0) a <*> traverseWithKey (\k (l,r) -> (,) <$> f (Fin (2*k+1)) l <*> f (Fin (2*k+2)) r) t
-  traverseWithKey f (V2 a b t) = V2 <$> f (Fin 0) a <*> f (Fin 1) b <*> traverseWithKey (\k (l,r) -> (,) <$> f (Fin (2*k+2)) l <*> f (Fin (2*k+3)) r) t
+  traverseWithKey f (V1 a t) = V1 <$> f (Fin 0) a <*> traverseWithKey (\(Fin k) (l,r) -> (,) <$> f (Fin (2*k+1)) l <*> f (Fin (2*k+2)) r) t
+  traverseWithKey f (V2 a b t) = V2 <$> f (Fin 0) a <*> f (Fin 1) b <*> traverseWithKey (\(Fin k) (l,r) -> (,) <$> f (Fin (2*k+2)) l <*> f (Fin (2*k+3)) r) t
 
 instance NonEmpty n => TraversableWithKey1 (Vector n) where
   traverseWithKey1 = traverseWithKey1'
@@ -221,7 +234,7 @@ instance Representable (Vector D0) where
   tabulate _ = V0
 
 instance Representable (Vector n) => Representable (Vector (D1 n)) where
-  tabulate f = V1 (f (Fin 0)) $ tabulate $ \k -> (f (2*k+1), f (2*k+2))
+  tabulate f = V1 (f (Fin 0)) $ tabulate $ \(Fin k) -> (f (Fin (2*k+1)), f (Fin (2*k+2)))
   
 instance Representable (Vector n) => Representable (Vector (D2 n)) where
-  tabulate f = V2 (f (Fin 0)) (f (Fin 1)) $ tabulate $ \k -> (f (2*k+2), f (2*k+3))
+  tabulate f = V2 (f (Fin 0)) (f (Fin 1)) $ tabulate $ \(Fin k) -> (f (Fin (2*k+2)), f (Fin (2*k+3)))

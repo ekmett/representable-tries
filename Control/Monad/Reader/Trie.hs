@@ -36,7 +36,7 @@ import Prelude hiding (lookup)
 
 type instance Key (ReaderTrieT a m) = (a, Key m)
 
-newtype ReaderTrieT a m b = ReaderTrieT { runReaderTrieT :: Trie a (m b) } 
+newtype ReaderTrieT a m b = ReaderTrieT { runReaderTrieT :: a :->: m b } 
 
 instance (HasTrie a, Functor m) => Functor (ReaderTrieT a m) where
   fmap f = ReaderTrieT . fmap (fmap f) . runReaderTrieT
@@ -57,7 +57,7 @@ instance (HasTrie a, Monad m) => Monad (ReaderTrieT a m) where
 
 instance (HasTrie a, Monad m) => MonadReader a (ReaderTrieT a m) where 
   ask = ReaderTrieT (trie return)
-  local f (ReaderTrieT fm) = ReaderTrieT (tabulate (index fm . coerceKey . f . uncoerceKey))
+  local f (ReaderTrieT fm) = ReaderTrieT (tabulate (index fm . f))
 
 instance HasTrie a => MonadTrans (ReaderTrieT a) where
   lift = ReaderTrieT . pure 
@@ -66,13 +66,13 @@ instance (HasTrie a, Distributive m) => Distributive (ReaderTrieT a m) where
   distribute = ReaderTrieT . fmap distribute . collect runReaderTrieT
 
 instance (HasTrie a, Keyed m) => Keyed (ReaderTrieT a m) where
-  mapWithKey f = ReaderTrieT . mapWithKey (\k -> mapWithKey (f . (,) (uncoerceKey k))) . runReaderTrieT
+  mapWithKey f = ReaderTrieT . mapWithKey (\k -> mapWithKey (f . (,) k)) . runReaderTrieT
 
 instance (HasTrie a, Indexable m) => Indexable (ReaderTrieT a m) where
   index = uncurry . fmap index . untrie . runReaderTrieT
 
-instance (HasTrie a, Lookup (Trie a), Lookup m) => Lookup (ReaderTrieT a m) where
-  lookup (k,k') (ReaderTrieT fm) = lookup (coerceKey k) fm >>= lookup k'
+instance (HasTrie a, Lookup ((:->:) a), Lookup m) => Lookup (ReaderTrieT a m) where
+  lookup (k,k') (ReaderTrieT fm) = lookup k fm >>= lookup k'
 
 instance (HasTrie a, Representable m) => Representable (ReaderTrieT a m) where
   tabulate = ReaderTrieT . trie . fmap tabulate . curry
@@ -84,10 +84,10 @@ instance (HasTrie a, Foldable1 m) => Foldable1 (ReaderTrieT a m) where
   foldMap1 f = foldMap1 (foldMap1 f) . runReaderTrieT
 
 instance (HasTrie a, FoldableWithKey m) => FoldableWithKey (ReaderTrieT a m) where
-  foldMapWithKey f = foldMapWithKey (\k -> foldMapWithKey (f . (,) (uncoerceKey k))) . runReaderTrieT
+  foldMapWithKey f = foldMapWithKey (\k -> foldMapWithKey (f . (,) k)) . runReaderTrieT
 
 instance (HasTrie a, FoldableWithKey1 m) => FoldableWithKey1 (ReaderTrieT a m) where
-  foldMapWithKey1 f = foldMapWithKey1 (\k -> foldMapWithKey1 (f . (,) (uncoerceKey k))) . runReaderTrieT 
+  foldMapWithKey1 f = foldMapWithKey1 (\k -> foldMapWithKey1 (f . (,) k)) . runReaderTrieT 
 
 instance (HasTrie a, Traversable m) => Traversable (ReaderTrieT a m) where
   traverse f = fmap ReaderTrieT . traverse (traverse f) . runReaderTrieT
@@ -96,10 +96,10 @@ instance (HasTrie a, Traversable1 m) => Traversable1 (ReaderTrieT a m) where
   traverse1 f = fmap ReaderTrieT . traverse1 (traverse1 f) . runReaderTrieT
 
 instance (HasTrie a, TraversableWithKey m) => TraversableWithKey (ReaderTrieT a m) where
-  traverseWithKey f = fmap ReaderTrieT . traverseWithKey (\k -> traverseWithKey (f . (,) (uncoerceKey k))) . runReaderTrieT
+  traverseWithKey f = fmap ReaderTrieT . traverseWithKey (\k -> traverseWithKey (f . (,) k)) . runReaderTrieT
 
 instance (HasTrie a, TraversableWithKey1 m) => TraversableWithKey1 (ReaderTrieT a m) where
-  traverseWithKey1 f = fmap ReaderTrieT . traverseWithKey1 (\k -> traverseWithKey1 (f . (,) (uncoerceKey k))) . runReaderTrieT
+  traverseWithKey1 f = fmap ReaderTrieT . traverseWithKey1 (\k -> traverseWithKey1 (f . (,) k)) . runReaderTrieT
 
 instance (HasTrie a, Representable m, Semigroup a, Semigroup (Key m)) => Extend (ReaderTrieT a m) where
   extend = extendRep

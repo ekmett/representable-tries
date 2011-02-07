@@ -41,6 +41,13 @@ left (EitherTrie f _) = f
 right :: EitherTrie f g a -> g a 
 right (EitherTrie _ g) = g
 
+instance (Apply f, Apply g, Semigroup s) => Semigroup (EitherTrie f g s) where
+  EitherTrie a b <> EitherTrie c d = EitherTrie ((<>) <$> a <.> c) ((<>) <$> b <.> d)
+
+instance (Applicative f, Applicative g, Monoid a) => Monoid (EitherTrie f g a) where
+  mempty = EitherTrie (pure mempty) (pure mempty)
+  EitherTrie a b `mappend` EitherTrie c d = EitherTrie (mappend <$> a <*> c) (mappend <$> b <*> d)
+  
 instance (Functor f, Functor g) => Functor (EitherTrie f g) where
   fmap f (EitherTrie fs gs) = EitherTrie (fmap f fs) (fmap f gs)
   b <$ EitherTrie fs gs = EitherTrie (b <$ fs) (b <$ gs)

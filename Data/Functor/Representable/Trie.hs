@@ -32,18 +32,15 @@ import Control.Monad.Reader
 import Control.Monad.Representable
 import Data.Bits
 import Data.Distributive
-import Data.Eq.Type
 import Data.Foldable
 import Data.Function (on)
 import Data.Functor.Adjunction
 import Data.Functor.Bind
 import Data.Functor.Identity
-import Data.Functor.Product
 import Data.Functor.Representable
 import Data.Functor.Representable.Trie.Bool
 import Data.Functor.Representable.Trie.Either
 import Data.Functor.Representable.Trie.List
-import Data.Key
 import Data.Key
 import Data.Monoid as Monoid
 import Data.Semigroup.Foldable

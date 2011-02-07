@@ -17,20 +17,10 @@ module Numeric.Nat.Zeroless
   , N1, N8, N16, N32, N64
   , Nat(..), nat 
   , Fin(..)
+  , Reverse
   ) where
 
-import Control.Applicative
-import Data.Distributive
-import Data.Functor.Representable
-import Data.Functor.Bind
-import Data.Foldable
 import Data.Function (on)
-import Data.Monoid
-import Data.Traversable
-import Data.Semigroup
-import Data.Semigroup.Foldable
-import Data.Semigroup.Traversable
-import Data.Key
 import Prelude hiding (lookup)
 
 infixl 7 :*:
@@ -105,7 +95,7 @@ type instance D2 n :*: m = (n :*: m) :+: (n :*: m) :+: m :+: m
 
 -- * Digit Counter
 type family Digits n
-type instance Digits Zero = Zero
+type instance Digits D0 = D0
 type instance Digits (D1 n) = Succ (Digits n)
 type instance Digits (D2 n) = Succ (Digits n)
 

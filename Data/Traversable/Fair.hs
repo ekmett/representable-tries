@@ -13,14 +13,8 @@ import Control.Applicative
 import Control.Arrow
 import Data.Key
 import Data.Functor.Apply
-import Data.Function (on)
 import Data.Monoid
 import Data.Stream.NonEmpty as NonEmpty hiding (toList)
-import Data.Foldable
-
--- placeholder instances
-instance Foldable1 NonEmpty
-instance Traversable1 NonEmpty
 
 refill :: Traversable t => t a -> [b] -> t b
 refill t l = snd (mapAccumL (\(x:xs) _ -> (xs, x)) l t)
@@ -45,7 +39,7 @@ traverseBoth f as bs = (refill as *** refill bs) <$> go (toList as) (toList bs)
   go [] []         = pure ([],[])
   go xs []         = flip (,) [] <$> traverse f xs
   go [] ys         = (,) [] <$> traverse f ys
-  go (x:xs) (y:ys) = (\x y (xs,ys) -> (x:xs,y:ys)) <$> f x <*> f y <*> go xs ys
+  go (x:xs) (y:ys) = (\x' y' (xs',ys') -> (x':xs',y':ys')) <$> f x <*> f y <*> go xs ys
 
 -- | fold both containers, interleaving results for fairness
 foldMapBoth1 :: (Foldable1 f, Foldable1 g, Semigroup m) => (a -> m) -> f a -> g a -> m
@@ -95,7 +89,7 @@ traverseWithKeyBoth f g as bs = (refill as *** refill bs) <$> go (toKeyedList as
   go [] []         = pure ([],[])
   go xs []         = flip (,) [] <$> traverse f' xs
   go [] ys         = (,) [] <$> traverse g' ys
-  go (x:xs) (y:ys) = (\x y (xs,ys) -> (x:xs,y:ys)) <$> f' x <*> g' y <*> go xs ys
+  go (x:xs) (y:ys) = (\x' y' (xs',ys') -> (x':xs',y':ys')) <$> f' x <*> g' y <*> go xs ys
 
 -- | fold both containers, interleaving results for fairness
 foldMapWithKeyBoth1 
