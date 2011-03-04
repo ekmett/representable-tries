@@ -12,7 +12,7 @@
 ----------------------------------------------------------------------
 
 module Numeric.Nat.Zeroless
-  ( D0, D1, D2, (:+:), (:*:), Zeroless(..)
+  ( D0(..), D1(..), D2(..), (:+:), (:*:), Zeroless(..)
   , Succ, Pred
   , N1, N8, N16, N32, N64
   , Nat(..), nat 
@@ -28,9 +28,9 @@ infixl 6 :+:
 
 -- * Type-level naturals using zeroless binary numbers
 
-data D0    -- ^ 0 
-data D1 n  -- ^ 2n + 1
-data D2 n  -- ^ 2n + 2
+data D0 = D0 -- ^ 0 
+data D1 n = D1 n -- ^ 2n + 1
+data D2 n = D2 n -- ^ 2n + 2
 
 -- * useful numbers
 type N1 = D1 D0
@@ -107,21 +107,36 @@ type instance Reverse' m (D2 n) = Reverse' (D2 m) n
 -- * bitwise reversal
 type Reverse n = Reverse' D0 n
 
+{-
+data Z = Z
+newtype S n = S n
+class Nat n where
+  caseNat :: forall n. ((n ~ Z) => r) -> (forall x. (n ~ (S x), Nat x) => x -> r) -> r
+-}
+
 -- * Class of zeroless-binary numbers
 class Zeroless n where
   ind :: f D0 
       -> (forall m. Zeroless m => f m -> f (D1 m)) 
       -> (forall m. Zeroless m => f m -> f (D2 m))
       -> f n
+  caseNat
+    :: forall r. ((n ~ D0) => r) 
+    -> (forall x. (n ~ D1 x, Zeroless x) => x -> r)
+    -> (forall x. (n ~ D2 x, Zeroless x) => x -> r)
+    -> n -> r
 
 instance Zeroless D0 where
   ind z _ _ = z 
+  caseNat z _ _ _ = z
 
 instance Zeroless n => Zeroless (D1 n) where
   ind z f g = f (ind z f g)
+  caseNat _ f _ (D1 x) = f x
 
 instance Zeroless n => Zeroless (D2 n) where
   ind z f g = g (ind z f g)
+  caseNat _ _ g (D2 x) = g x
 
 class Zeroless n => Positive n
 instance Zeroless n => Positive (D1 n)

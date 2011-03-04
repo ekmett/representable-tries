@@ -17,7 +17,7 @@ import Data.Monoid
 import Data.Stream.NonEmpty as NonEmpty hiding (toList)
 
 refill :: Traversable t => t a -> [b] -> t b
-refill t l = snd (mapAccumL (\(x:xs) _ -> (xs, x)) l t)
+refill t l = snd (mapAccumL (\xs _ -> (Prelude.tail xs, Prelude.head xs)) l t)
 
 toNonEmptyList :: Foldable1 f => f a -> NonEmpty a
 toNonEmptyList = NonEmpty.fromList . toList

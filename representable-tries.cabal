@@ -1,6 +1,6 @@
 name:          representable-tries
 category:      Data Structures, Functors, Monads, Comonads
-version:       0.3
+version:       0.3.1
 license:       BSD3
 cabal-version: >= 1.6
 license-file:  LICENSE
@@ -41,7 +41,7 @@ library
     Data.Functor.Representable.Trie.List
     Data.Functor.Representable.Trie.Either
     Data.Traversable.Fair
-    Data.Vector.Zeroless
     Numeric.Nat.Zeroless
 
+--     Data.Vector.Zeroless
   ghc-options: -Wall

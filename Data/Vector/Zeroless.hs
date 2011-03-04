@@ -20,6 +20,7 @@ module Data.Vector.Zeroless
 
 import Control.Arrow
 import Control.Applicative
+import Control.Comonad
 import Data.Distributive
 import Data.Functor.Representable
 import Data.Functor.Bind
@@ -57,6 +58,15 @@ class NonEmpty n where
   traverse1' :: Apply t => (a -> t b) -> Vector n a -> t (Vector n b)
   foldMapWithKey1' :: Semigroup m => (Fin n -> a -> m) -> Vector n a -> m
   traverseWithKey1' :: Apply t => (Fin n -> a -> t b) -> Vector n a -> t (Vector n b)
+
+-- TODO: there should be a nicer encoding of this. we know the resulting shape.
+instance Extend (Vector n) where
+  extend _ V0 = V0
+  extend f w@(V1 _ _) = f w <| extend f (tail w)
+  extend f w@(V2 _ _ _) = f w <| extend f (tail w)
+
+instance NonEmpty n => Comonad (Vector n) where
+  extract = head
 
 instance NonEmpty (D1 n) where
   tail (V1 _ V0) = V0

@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeFamilies #-}
 ----------------------------------------------------------------------
 -- |
--- Module      :  Data.Functor.Representable.Trie.Bool
+-- Module      :  Data.Functor.Representable.Trie.List
 -- Copyright   :  (c) Edward Kmett 2011
 -- License     :  BSD3
 -- 
