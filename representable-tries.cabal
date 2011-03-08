@@ -1,6 +1,6 @@
 name:          representable-tries
 category:      Data Structures, Functors, Monads, Comonads
-version:       0.3.1
+version:       0.3.1.1
 license:       BSD3
 cabal-version: >= 1.6
 license-file:  LICENSE
@@ -23,15 +23,15 @@ library
     base >= 4 && < 4.4,
     bifunctors >= 0.1 && < 0.2,
     comonad >= 1.0 && < 1.1,
-    comonad-transformers >= 1.5.2 && < 1.6,
+    comonad-transformers >= 1.5.2.3 && < 1.6,
     containers >= 0.4.0.0 && < 0.5,
-    distributive >= 0.1.1 && < 0.2,
+    distributive >= 0.2 && < 0.3,
     keys >= 0.2.1 && < 0.3,
     mtl >= 2.0.1.0 && < 2.1,
-    representable-functors >= 0.3 && < 0.4,
+    representable-functors >= 0.3.0.2 && < 0.4,
     semigroups >= 0.3.4 && < 0.4,
     semigroupoids >= 1.1.1 && < 1.2.0,
-    streams >= 0.6 && < 0.7,
+    streams >= 0.6.1.2 && < 0.7,
     transformers >= 0.2.0 && < 0.3
 
   exposed-modules:
