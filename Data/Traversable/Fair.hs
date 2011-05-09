@@ -14,7 +14,7 @@ import Control.Arrow
 import Data.Key
 import Data.Functor.Apply
 import Data.Monoid
-import Data.Stream.NonEmpty as NonEmpty hiding (toList)
+import Data.List.NonEmpty as NonEmpty hiding (toList)
 
 refill :: Traversable t => t a -> [b] -> t b
 refill t l = snd (mapAccumL (\xs _ -> (Prelude.tail xs, Prelude.head xs)) l t)
