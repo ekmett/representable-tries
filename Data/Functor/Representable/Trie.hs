@@ -55,7 +55,7 @@ import qualified Data.IntMap as IntMap
 import Data.Traversable
 import Prelude hiding (lookup, foldr)
 
-class (TraversableWithKey1 (BaseTrie a), Representable (BaseTrie a)) => HasTrie a where
+class (Adjustable (BaseTrie a), TraversableWithKey1 (BaseTrie a), Representable (BaseTrie a)) => HasTrie a where
   type BaseTrie a :: * -> *
   -- projectKey . embedKey = id
   embedKey   :: a -> Key (BaseTrie a)
@@ -144,6 +144,9 @@ instance HasTrie e => Distributive ((:->:) e) where
 
 instance HasTrie e => Representable ((:->:) e) where
   tabulate f = Trie $ tabulate (f . projectKey)
+
+instance HasTrie e => Adjustable ((:->:) e) where
+  adjust f k (Trie as) = Trie (adjust f (embedKey k) as)
 
 instance HasTrie e => Adjunction (Entry e) ((:->:) e) where
   unit = mapWithKey Entry . pure

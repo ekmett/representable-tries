@@ -71,6 +71,9 @@ instance (HasTrie a, Keyed m) => Keyed (ReaderTrieT a m) where
 instance (HasTrie a, Indexable m) => Indexable (ReaderTrieT a m) where
   index = uncurry . fmap index . untrie . runReaderTrieT
 
+instance (HasTrie a, Adjustable m) => Adjustable (ReaderTrieT a m) where
+  adjust f (a,k) = ReaderTrieT . adjust (adjust f k) a . runReaderTrieT 
+
 instance (HasTrie a, Lookup ((:->:) a), Lookup m) => Lookup (ReaderTrieT a m) where
   lookup (k,k') (ReaderTrieT fm) = lookup k fm >>= lookup k'
 
