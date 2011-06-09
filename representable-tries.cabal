@@ -1,6 +1,6 @@
 name:          representable-tries
 category:      Data Structures, Functors, Monads, Comonads
-version:       0.3.7
+version:       0.5.0
 license:       BSD3
 cabal-version: >= 1.6
 license-file:  LICENSE
