@@ -136,6 +136,9 @@ inTrie3 = untrie ~> inTrie2
 instance Functor (Entry a) where
   fmap f (Entry a b) = Entry a (f b)
 
+instance Lookup ((:->:)e) where
+  lookup = lookupDefault
+
 instance Indexable ((:->:)e) where
   index (Trie f) = index f . embedKey
 
