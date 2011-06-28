@@ -21,10 +21,10 @@ import Control.Comonad
 import Control.Monad.Trans.Class
 import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
-import Control.Monad.Representable
 import Control.Monad.Writer.Class as Writer
 import Data.Distributive
 import Data.Functor.Bind
+import Data.Functor.Representable
 import Data.Functor.Representable.Trie
 import Data.Foldable
 import Data.Key

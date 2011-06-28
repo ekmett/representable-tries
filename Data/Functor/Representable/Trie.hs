@@ -28,8 +28,8 @@ module Data.Functor.Representable.Trie
 import Control.Applicative
 import Control.Arrow
 import Control.Comonad
-import Control.Monad.Reader
-import Control.Monad.Representable
+import Control.Monad.Reader.Class
+import Control.Monad.Representable.Reader
 import Data.Bits
 import Data.Distributive
 import Data.Foldable
@@ -263,12 +263,12 @@ instance HasTrie a => HasTrie (Monoid.Product a) where
   projectKey = Monoid.Product . projectKey 
 
 instance (HasTrie a, HasTrie b) => HasTrie (a, b) where
-  type BaseTrie (a, b) = RepT (BaseTrie a) (BaseTrie b)
+  type BaseTrie (a, b) = ReaderT (BaseTrie a) (BaseTrie b)
   embedKey = embedKey *** embedKey
   projectKey = projectKey *** projectKey
 
 instance (HasTrie a, HasTrie b) => HasTrie (Entry a b) where
-  type BaseTrie (Entry a b) = RepT (BaseTrie a) (BaseTrie b)
+  type BaseTrie (Entry a b) = ReaderT (BaseTrie a) (BaseTrie b)
   embedKey (Entry a b) = (embedKey a, embedKey b)
   projectKey (a, b) = Entry (projectKey a) (projectKey b)
 
