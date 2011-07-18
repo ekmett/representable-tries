@@ -32,6 +32,8 @@ import Control.Monad.Reader.Class
 import Control.Monad.Representable.Reader
 import Data.Bits
 import Data.Distributive
+import Data.Word
+import Data.Int
 import Data.Foldable
 import Data.Function (on)
 import Data.Functor.Adjunction
@@ -330,6 +332,47 @@ bitsZ = (>= 0) &&& (bits . abs)
 -- TODO: fix the show instance of this
 instance HasTrie Int where
   type BaseTrie Int = BaseTrie (Bool, [Bool])
+  embedKey = embedKey . bitsZ 
+  projectKey = unbitsZ . projectKey
+
+instance HasTrie Int8 where
+  type BaseTrie Int8 = BaseTrie (Bool, [Bool])
+  embedKey = embedKey . bitsZ 
+  projectKey = unbitsZ . projectKey
+
+instance HasTrie Int16 where
+  type BaseTrie Int16 = BaseTrie (Bool, [Bool])
+  embedKey = embedKey . bitsZ 
+  projectKey = unbitsZ . projectKey
+
+instance HasTrie Int32 where
+  type BaseTrie Int32 = BaseTrie (Bool, [Bool])
+  embedKey = embedKey . bitsZ 
+  projectKey = unbitsZ . projectKey
+
+instance HasTrie Int64 where
+  type BaseTrie Int64 = BaseTrie (Bool, [Bool])
+  embedKey = embedKey . bitsZ 
+  projectKey = unbitsZ . projectKey
+
+instance HasTrie Word where
+  type BaseTrie Word = BaseTrie (Bool, [Bool])
+  embedKey = embedKey . bitsZ 
+  projectKey = unbitsZ . projectKey
+instance HasTrie Word8 where
+  type BaseTrie Word8 = BaseTrie (Bool, [Bool])
+  embedKey = embedKey . bitsZ 
+  projectKey = unbitsZ . projectKey
+instance HasTrie Word16 where
+  type BaseTrie Word16 = BaseTrie (Bool, [Bool])
+  embedKey = embedKey . bitsZ 
+  projectKey = unbitsZ . projectKey
+instance HasTrie Word32 where
+  type BaseTrie Word32 = BaseTrie (Bool, [Bool])
+  embedKey = embedKey . bitsZ 
+  projectKey = unbitsZ . projectKey
+instance HasTrie Word64 where
+  type BaseTrie Word64 = BaseTrie (Bool, [Bool])
   embedKey = embedKey . bitsZ 
   projectKey = unbitsZ . projectKey
 
