@@ -62,6 +62,12 @@ instance Monad BoolTrie where
 instance Keyed BoolTrie where
   mapWithKey f (BoolTrie a b) = BoolTrie (f False a) (f True b)
 
+instance Zip BoolTrie where
+  zipWith f (BoolTrie a b) (BoolTrie c d) = BoolTrie (f a c) (f b d)
+
+instance ZipWithKey BoolTrie where
+  zipWithKey f (BoolTrie a b) (BoolTrie c d) = BoolTrie (f False a c) (f True b d)
+
 instance Foldable BoolTrie where
   foldMap f (BoolTrie a b) = f a `mappend` f b
 

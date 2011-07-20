@@ -32,7 +32,7 @@ import Data.Monoid
 import Data.Traversable
 import Data.Semigroup.Foldable
 import Data.Semigroup.Traversable
-import Prelude hiding (lookup)
+import Prelude hiding (lookup,zipWith)
 
 type instance Key (ReaderTrieT a m) = (a, Key m)
 
@@ -64,6 +64,12 @@ instance HasTrie a => MonadTrans (ReaderTrieT a) where
 
 instance (HasTrie a, Distributive m) => Distributive (ReaderTrieT a m) where
   distribute = ReaderTrieT . fmap distribute . collect runReaderTrieT
+
+instance (HasTrie a, Zip m) => Zip (ReaderTrieT a m) where
+  zipWith f (ReaderTrieT m) (ReaderTrieT n) = ReaderTrieT $ zipWith (zipWith f) m n 
+
+instance (HasTrie a, ZipWithKey m) => ZipWithKey (ReaderTrieT a m) where
+  zipWithKey f (ReaderTrieT m) (ReaderTrieT n) = ReaderTrieT $ zipWithKey (\k -> zipWithKey (f . (,) k)) m n 
 
 instance (HasTrie a, Keyed m) => Keyed (ReaderTrieT a m) where
   mapWithKey f = ReaderTrieT . mapWithKey (\k -> mapWithKey (f . (,) k)) . runReaderTrieT

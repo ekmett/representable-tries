@@ -27,7 +27,7 @@ import Data.Semigroup
 import Data.Semigroup.Foldable
 import Data.Semigroup.Traversable
 import Data.Key
-import Prelude hiding (lookup)
+import Prelude hiding (lookup,zipWith)
 
 -- the f-branching stream comonad is the trie of a list 
 data ListTrie f a = ListTrie a (f (ListTrie f a)) -- deriving (Eq,Ord,Show,Read)
@@ -62,6 +62,12 @@ instance Representable f => Monad (ListTrie f) where
   return = pure
   (>>=) = bindRep
   _ >> a = a
+
+instance Zip f => Zip (ListTrie f) where
+  zipWith f (ListTrie a as) (ListTrie b bs) = ListTrie (f a b) (zipWith (zipWith f) as bs)
+
+instance ZipWithKey f => ZipWithKey (ListTrie f) where
+  zipWithKey f (ListTrie a as) (ListTrie b bs) = ListTrie (f [] a b) (zipWithKey (\x -> zipWithKey (f . (x:))) as bs)
 
 instance Keyed f => Keyed (ListTrie f) where
   mapWithKey f (ListTrie a as) = ListTrie (f [] a) (mapWithKey (\x -> mapWithKey (f . (x:))) as)

@@ -22,7 +22,6 @@ module Data.Functor.Representable.Trie
   , trie, untrie
   , (:->:)(..)
   , Entry(..)
-  , runTrie
   ) where
 
 import Control.Applicative
@@ -47,7 +46,6 @@ import Data.Key
 import Data.Monoid as Monoid
 import Data.Semigroup.Foldable
 import Data.Semigroup.Traversable
-import Data.Semigroupoid
 import Data.Sequence (Seq, (<|))
 import qualified Data.Sequence as Seq
 import Data.Map (Map)
@@ -67,8 +65,7 @@ class (Adjustable (BaseTrie a), TraversableWithKey1 (BaseTrie a), Representable 
   validKey _ = True
 -}
 
-data a :->: b where
-  Trie :: HasTrie a => BaseTrie a b -> a :->: b
+newtype a :->: b = Trie { runTrie :: BaseTrie a b } 
 
 type instance Key ((:->:) a) = a
 
@@ -76,15 +73,12 @@ data Entry a b = Entry a b
 
 -- * Combinators
 
-runTrie :: (a :->: b) -> BaseTrie a b
-runTrie (Trie f) = f
-
 -- Matt Hellige's notation for @argument f . result g@.
 -- <http://matt.immute.net/content/pointless-fun>
 (~>) :: (a' -> a) -> (b -> b') -> (a -> b) -> a' -> b'
 g ~> f = (f .) . (. g)
 
-untrie :: (t :->: a) -> t -> a
+untrie :: HasTrie t => (t :->: a) -> t -> a
 untrie = index
 
 trie :: HasTrie t => (t -> a) -> (t :->: a)
@@ -138,10 +132,10 @@ inTrie3 = untrie ~> inTrie2
 instance Functor (Entry a) where
   fmap f (Entry a b) = Entry a (f b)
 
-instance Lookup ((:->:)e) where
+instance HasTrie e => Lookup ((:->:)e) where
   lookup = lookupDefault
 
-instance Indexable ((:->:)e) where
+instance HasTrie e => Indexable ((:->:)e) where
   index (Trie f) = index f . embedKey
 
 instance HasTrie e => Distributive ((:->:) e) where
@@ -153,58 +147,57 @@ instance HasTrie e => Representable ((:->:) e) where
 instance HasTrie e => Adjustable ((:->:) e) where
   adjust f k (Trie as) = Trie (adjust f (embedKey k) as)
 
+instance HasTrie e => Zip ((:->:) e)
+
+instance HasTrie e => ZipWithKey ((:->:) e) 
+
 instance HasTrie e => Adjunction (Entry e) ((:->:) e) where
   unit = mapWithKey Entry . pure
   counit (Entry a t) = index t a
 
-instance Functor ((:->:) a) where
+instance HasTrie a => Functor ((:->:) a) where
   fmap f (Trie g) = Trie (fmap f g)
 
-instance Keyed ((:->:) a) where
+instance HasTrie a => Keyed ((:->:) a) where
   mapWithKey f (Trie a) = Trie (mapWithKey (f . projectKey) a)
 
-instance Foldable ((:->:) a) where
+instance HasTrie a => Foldable ((:->:) a) where
   foldMap f (Trie a) = foldMap f a
 
-instance FoldableWithKey ((:->:) a) where
+instance HasTrie a => FoldableWithKey ((:->:) a) where
   foldMapWithKey f (Trie a) = foldMapWithKey (f . projectKey) a
 
-instance Traversable ((:->:) a) where
+instance HasTrie a => Traversable ((:->:) a) where
   traverse f (Trie a) = Trie <$> traverse f a
 
-instance TraversableWithKey ((:->:) a) where
+instance HasTrie a => TraversableWithKey ((:->:) a) where
   traverseWithKey f (Trie a) = Trie <$> traverseWithKey (f . projectKey) a
 
-instance Foldable1 ((:->:) a) where
+instance HasTrie a => Foldable1 ((:->:) a) where
   foldMap1 f (Trie a) = foldMap1 f a
 
-instance FoldableWithKey1 ((:->:) a) where
+instance HasTrie a => FoldableWithKey1 ((:->:) a) where
   foldMapWithKey1 f (Trie a) = foldMapWithKey1 (f . projectKey) a
 
-instance Traversable1 ((:->:) a) where
+instance HasTrie a => Traversable1 ((:->:) a) where
   traverse1 f (Trie a) = Trie <$> traverse1 f a
 
-instance TraversableWithKey1 ((:->:) a) where
+instance HasTrie a => TraversableWithKey1 ((:->:) a) where
   traverseWithKey1 f (Trie a) = Trie <$> traverseWithKey1 (f . projectKey) a
 
-instance Eq b => Eq (a :->: b) where
+instance (HasTrie a, Eq b) => Eq (a :->: b) where
   (==) = (==) `on` toList
 
-instance Ord b => Ord (a :->: b) where
+instance (HasTrie a, Ord b) => Ord (a :->: b) where
   compare = compare `on` toList
 
-instance (Show a, Show b) => Show (a :->: b) where 
+instance (HasTrie a, Show a, Show b) => Show (a :->: b) where 
   showsPrec d = showsPrec d . toKeyedList
 
-instance Apply ((:->:) a) where
+instance HasTrie a => Apply ((:->:) a) where
   Trie f <.> Trie g = Trie (f <.> g)
   a <. _ = a
   _ .> b = b
-
-instance Semigroupoid (:->:) where
-  o (Trie f) = fmap (index f . embedKey)
-
--- instance HasTrie a => Ob (:->:) a where semiid = Trie return
 
 instance HasTrie a => Applicative ((:->:) a) where
   pure a = Trie (pure a)
@@ -212,7 +205,7 @@ instance HasTrie a => Applicative ((:->:) a) where
   a <* _ = a
   _ *> b = b
 
-instance Bind ((:->:) a) where
+instance HasTrie a => Bind ((:->:) a) where
   Trie m >>- f = Trie (tabulate (\a -> index (runTrie (f (index m a))) a))
   
 instance HasTrie a => Monad ((:->:) a) where
@@ -228,6 +221,7 @@ instance HasTrie a => MonadReader a ((:->:) a) where
 
 instance (HasTrie m, Semigroup m, Monoid m) => Comonad ((:->:) m) where
   extract = flip index mempty
+
 
 instance (HasTrie m, Semigroup m) => Extend ((:->:) m) where
   duplicate = duplicateRep

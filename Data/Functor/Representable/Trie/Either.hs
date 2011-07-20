@@ -28,7 +28,7 @@ import Data.Semigroup
 import Data.Semigroup.Foldable
 import Data.Semigroup.Traversable
 import Data.Key
-import Prelude hiding (lookup)
+import Prelude hiding (lookup,zipWith)
 
 -- the product functor would be the trie of an either, but we fair traversal
 data EitherTrie f g a = EitherTrie (f a) (g a)
@@ -74,6 +74,12 @@ instance (Representable f, Representable g) => Monad (EitherTrie f g) where
 
 instance (Keyed f, Keyed g) => Keyed (EitherTrie f g) where
   mapWithKey f (EitherTrie fs gs) = EitherTrie (mapWithKey (f . Left) fs) (mapWithKey (f . Right) gs)
+
+instance (Zip f, Zip g) => Zip (EitherTrie f g) where
+  zipWith f (EitherTrie fs gs) (EitherTrie hs is) = EitherTrie (zipWith f fs hs) (zipWith f gs is)
+
+instance (ZipWithKey f, ZipWithKey g) => ZipWithKey (EitherTrie f g) where
+  zipWithKey f (EitherTrie fs gs) (EitherTrie hs is) = EitherTrie (zipWithKey (f . Left) fs hs) (zipWithKey (f . Right) gs is)
 
 instance (Foldable f, Foldable g) => Foldable (EitherTrie f g) where
   foldMap f (EitherTrie fs gs) = foldMapBoth f fs gs
