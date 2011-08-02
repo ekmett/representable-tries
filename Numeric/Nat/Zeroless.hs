@@ -14,6 +14,8 @@
 module Numeric.Nat.Zeroless
   ( D0(..), D1(..), D2(..), (:+:), (:*:), Zeroless(..)
   , Succ, Pred
+  , LT, GT, EQ
+  , Compare
   , N1, N8, N16, N32, N64
   , Nat(..), nat 
   , Fin(..)
@@ -87,6 +89,23 @@ type instance Add C2 (D2 n) (D2 m) = D2 (Add C2 n m)
 -- * Adder
 type n :+: m = Add C0 n m
 
+data LT
+data EQ
+data GT
+
+type family   Compare' a l      r
+type instance Compare' a D0     D0     = a
+type instance Compare' a D0     (D1 r) = LT
+type instance Compare' a D0     (D2 r) = LT
+type instance Compare' a (D1 r) D0     = GT
+type instance Compare' a (D1 l) (D1 r) = Compare' a l r
+type instance Compare' a (D1 l) (D2 r) = Compare' LT l r
+type instance Compare' a (D2 l) D0     = GT
+type instance Compare' a (D2 l) (D1 r) = Compare' GT l r
+type instance Compare' a (D2 l) (D2 r) = Compare' a l r
+
+type Compare m n = Compare' EQ m n 
+
 -- * Multiplier
 type family n :*: m
 type instance D0 :*: m = D0
@@ -121,7 +140,7 @@ class Zeroless n where
       -> (forall m. Zeroless m => f m -> f (D2 m))
       -> f n
   caseNat
-    :: forall r. ((n ~ D0) => r) 
+    :: ((n ~ D0) => r) 
     -> (forall x. (n ~ D1 x, Zeroless x) => x -> r)
     -> (forall x. (n ~ D2 x, Zeroless x) => x -> r)
     -> n -> r
