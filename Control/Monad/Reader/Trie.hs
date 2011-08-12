@@ -30,6 +30,7 @@ import Data.Foldable
 import Data.Key
 import Data.Monoid
 import Data.Traversable
+import Data.Semigroup
 import Data.Semigroup.Foldable
 import Data.Semigroup.Traversable
 import Prelude hiding (lookup,zipWith)

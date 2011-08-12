@@ -14,6 +14,11 @@ import Control.Arrow
 import Data.Key
 import Data.Functor.Apply
 import Data.Monoid
+import Data.Foldable
+import Data.Traversable
+import Data.Semigroup
+import Data.Semigroup.Foldable
+import Data.Semigroup.Traversable
 import Data.List.NonEmpty as NonEmpty hiding (toList)
 
 refill :: Traversable t => t a -> [b] -> t b

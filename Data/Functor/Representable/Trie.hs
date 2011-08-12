@@ -31,6 +31,7 @@ import Control.Monad.Reader.Class
 import Control.Monad.Representable.Reader
 import Data.Bits
 import Data.Distributive
+import Data.Semigroup
 import Data.Word
 import Data.Int
 import Data.Foldable
