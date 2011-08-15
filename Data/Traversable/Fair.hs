@@ -13,7 +13,6 @@ import Control.Applicative
 import Control.Arrow
 import Data.Key
 import Data.Functor.Apply
-import Data.Monoid
 import Data.Foldable
 import Data.Traversable
 import Data.Semigroup

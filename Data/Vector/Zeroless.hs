@@ -25,7 +25,6 @@ import Data.Distributive
 import Data.Functor.Representable
 import Data.Functor.Bind
 import Data.Foldable
-import Data.Monoid
 import Data.Traversable
 import Data.Semigroup
 import Data.Semigroup.Foldable

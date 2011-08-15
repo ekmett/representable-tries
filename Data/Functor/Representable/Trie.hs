@@ -44,7 +44,7 @@ import Data.Functor.Representable.Trie.Bool
 import Data.Functor.Representable.Trie.Either
 import Data.Functor.Representable.Trie.List
 import Data.Key
-import Data.Monoid as Monoid
+import qualified Data.Monoid as Monoid
 import Data.Semigroup.Foldable
 import Data.Semigroup.Traversable
 import Data.Sequence (Seq, (<|))
