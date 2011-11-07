@@ -39,7 +39,6 @@ import Data.Function (on)
 import Data.Functor.Adjunction
 import Data.Functor.Bind
 import Data.Functor.Identity
-import Data.Functor.Representable
 import Data.Functor.Representable.Trie.Bool
 import Data.Functor.Representable.Trie.Either
 import Data.Functor.Representable.Trie.List
