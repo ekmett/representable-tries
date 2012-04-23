@@ -195,13 +195,13 @@ instance (HasTrie a, Show a, Show b) => Show (a :->: b) where
   showsPrec d = showsPrec d . toKeyedList
 
 instance HasTrie a => Apply ((:->:) a) where
-  Trie f <.> Trie g = Trie (f <.> g)
+  (<.>) = apRep
   a <. _ = a
   _ .> b = b
 
 instance HasTrie a => Applicative ((:->:) a) where
-  pure a = Trie (pure a)
-  Trie f <*> Trie g = Trie (f <*> g)
+  pure a = Trie (pureRep a)
+  (<*>) = apRep
   a <* _ = a
   _ *> b = b
 

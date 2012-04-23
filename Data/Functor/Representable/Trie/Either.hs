@@ -37,7 +37,7 @@ type instance Key (EitherTrie f g) = Either (Key f) (Key g)
 left :: EitherTrie f g a -> f a
 left (EitherTrie f _) = f
 
-right :: EitherTrie f g a -> g a 
+right :: EitherTrie f g a -> g a
 right (EitherTrie _ g) = g
 
 instance (Apply f, Apply g, Semigroup s) => Semigroup (EitherTrie f g s) where
@@ -46,7 +46,7 @@ instance (Apply f, Apply g, Semigroup s) => Semigroup (EitherTrie f g s) where
 instance (Applicative f, Applicative g, Monoid a) => Monoid (EitherTrie f g a) where
   mempty = EitherTrie (pure mempty) (pure mempty)
   EitherTrie a b `mappend` EitherTrie c d = EitherTrie (mappend <$> a <*> c) (mappend <$> b <*> d)
-  
+
 instance (Functor f, Functor g) => Functor (EitherTrie f g) where
   fmap f (EitherTrie fs gs) = EitherTrie (fmap f fs) (fmap f gs)
   b <$ EitherTrie fs gs = EitherTrie (b <$ fs) (b <$ gs)
@@ -63,11 +63,11 @@ instance (Applicative f, Applicative g) => Applicative (EitherTrie f g) where
   _ *> b = b
 
 -- the direct implementation in terms of Bind is inefficient, using bindRep instead
-instance (Representable f, Representable g) => Bind (EitherTrie f g) where
+instance (Apply f, Representable f, Apply g, Representable g) => Bind (EitherTrie f g) where
   (>>-) = bindRep
 
 instance (Representable f, Representable g) => Monad (EitherTrie f g) where
-  return = pure
+  return = pureRep
   (>>=) = bindRep
   _ >> a = a
 
