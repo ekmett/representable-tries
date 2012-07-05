@@ -5,14 +5,14 @@
 -- Module      :  Data.Functor.Representable.Trie
 -- Copyright   :  (c) Edward Kmett 2011
 -- License     :  BSD3
--- 
+--
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
--- 
+--
 ----------------------------------------------------------------------
 
 module Data.Functor.Representable.Trie
-  ( 
+  (
   -- * Representations of polynomial functors
     HasTrie(..)
   -- * Memoizing functions
@@ -38,6 +38,7 @@ import Data.Foldable
 import Data.Function (on)
 import Data.Functor.Adjunction
 import Data.Functor.Bind
+import Data.Functor.Extend
 import Data.Functor.Identity
 import Data.Functor.Representable.Trie.Bool
 import Data.Functor.Representable.Trie.Either
@@ -65,7 +66,7 @@ class (Adjustable (BaseTrie a), TraversableWithKey1 (BaseTrie a), Representable 
   validKey _ = True
 -}
 
-newtype a :->: b = Trie { runTrie :: BaseTrie a b } 
+newtype a :->: b = Trie { runTrie :: BaseTrie a b }
 
 type instance Key ((:->:) a) = a
 
@@ -107,22 +108,22 @@ memo3 :: (HasTrie r, HasTrie s, HasTrie t) => (r -> s -> t -> a) -> r -> s -> t 
 memo3 = mup memo2
 
 -- | Apply a unary function inside of a tabulate
-inTrie 
-  :: (HasTrie a, HasTrie c) 
+inTrie
+  :: (HasTrie a, HasTrie c)
   => ((a -> b) -> c -> d)
   -> (a :->: b) -> c :->: d
 inTrie = untrie ~> trie
 
 -- | Apply a binary function inside of a tabulate
-inTrie2 
-  :: (HasTrie a, HasTrie c, HasTrie e) 
+inTrie2
+  :: (HasTrie a, HasTrie c, HasTrie e)
   => ((a -> b) -> (c -> d) -> e -> f)
   -> (a :->: b) -> (c :->: d) -> e :->: f
 inTrie2 = untrie ~> inTrie
 
 -- | Apply a ternary function inside of a tabulate
-inTrie3 
-  :: (HasTrie a, HasTrie c, HasTrie e, HasTrie g) 
+inTrie3
+  :: (HasTrie a, HasTrie c, HasTrie e, HasTrie g)
   => ((a -> b) -> (c -> d) -> (e -> f) -> g -> h)
   -> (a :->: b) -> (c :->: d) -> (e :->: f) -> g :->: h
 inTrie3 = untrie ~> inTrie2
@@ -149,7 +150,7 @@ instance HasTrie e => Adjustable ((:->:) e) where
 
 instance HasTrie e => Zip ((:->:) e)
 
-instance HasTrie e => ZipWithKey ((:->:) e) 
+instance HasTrie e => ZipWithKey ((:->:) e)
 
 instance HasTrie e => Adjunction (Entry e) ((:->:) e) where
   unit = mapWithKey Entry . pure
@@ -191,7 +192,7 @@ instance (HasTrie a, Eq b) => Eq (a :->: b) where
 instance (HasTrie a, Ord b) => Ord (a :->: b) where
   compare = compare `on` toList
 
-instance (HasTrie a, Show a, Show b) => Show (a :->: b) where 
+instance (HasTrie a, Show a, Show b) => Show (a :->: b) where
   showsPrec d = showsPrec d . toKeyedList
 
 instance HasTrie a => Apply ((:->:) a) where
@@ -207,7 +208,7 @@ instance HasTrie a => Applicative ((:->:) a) where
 
 instance HasTrie a => Bind ((:->:) a) where
   Trie m >>- f = Trie (tabulate (\a -> index (runTrie (f (index m a))) a))
-  
+
 instance HasTrie a => Monad ((:->:) a) where
   return a = Trie (pureRep a)
   (>>=) = (>>-)
@@ -217,14 +218,14 @@ instance HasTrie a => MonadReader a ((:->:) a) where
   ask = askRep
   local = localRep
 
--- TODO: remove dependency on HasTrie in these: 
+-- TODO: remove dependency on HasTrie in these:
 
-instance (HasTrie m, Semigroup m, Monoid m) => Comonad ((:->:) m) where
+instance (HasTrie m, Monoid m) => Comonad ((:->:) m) where
+  duplicate = duplicateRep
   extract = flip index mempty
 
-
 instance (HasTrie m, Semigroup m) => Extend ((:->:) m) where
-  duplicate = duplicateRep
+  duplicated = duplicatedRep
 
 -- * Instances
 
@@ -246,17 +247,17 @@ instance HasTrie Any where
 instance HasTrie a => HasTrie (Dual a) where
   type BaseTrie (Dual a) = BaseTrie a
   embedKey = embedKey . getDual
-  projectKey = Dual . projectKey 
+  projectKey = Dual . projectKey
 
 instance HasTrie a => HasTrie (Sum a) where
   type BaseTrie (Sum a) = BaseTrie a
   embedKey = embedKey . getSum
-  projectKey = Sum . projectKey 
+  projectKey = Sum . projectKey
 
 instance HasTrie a => HasTrie (Monoid.Product a) where
   type BaseTrie (Monoid.Product a) = BaseTrie a
   embedKey = embedKey . Monoid.getProduct
-  projectKey = Monoid.Product . projectKey 
+  projectKey = Monoid.Product . projectKey
 
 instance (HasTrie a, HasTrie b) => HasTrie (a, b) where
   type BaseTrie (a, b) = ReaderT (BaseTrie a) (BaseTrie b)
@@ -298,7 +299,7 @@ instance (HasTrie v) => HasTrie (IntMap v) where
   embedKey = foldrWithKey (\k v t -> embedKey (k,v) : t) []
   projectKey = IntMap.fromDistinctAscList . map projectKey
 
-  
+
 -- | Extract bits in little-endian order
 bits :: Bits t => t -> [Bool]
 bits 0 = []
@@ -326,48 +327,48 @@ bitsZ = (>= 0) &&& (bits . abs)
 -- TODO: fix the show instance of this
 instance HasTrie Int where
   type BaseTrie Int = BaseTrie (Bool, [Bool])
-  embedKey = embedKey . bitsZ 
+  embedKey = embedKey . bitsZ
   projectKey = unbitsZ . projectKey
 
 instance HasTrie Int8 where
   type BaseTrie Int8 = BaseTrie (Bool, [Bool])
-  embedKey = embedKey . bitsZ 
+  embedKey = embedKey . bitsZ
   projectKey = unbitsZ . projectKey
 
 instance HasTrie Int16 where
   type BaseTrie Int16 = BaseTrie (Bool, [Bool])
-  embedKey = embedKey . bitsZ 
+  embedKey = embedKey . bitsZ
   projectKey = unbitsZ . projectKey
 
 instance HasTrie Int32 where
   type BaseTrie Int32 = BaseTrie (Bool, [Bool])
-  embedKey = embedKey . bitsZ 
+  embedKey = embedKey . bitsZ
   projectKey = unbitsZ . projectKey
 
 instance HasTrie Int64 where
   type BaseTrie Int64 = BaseTrie (Bool, [Bool])
-  embedKey = embedKey . bitsZ 
+  embedKey = embedKey . bitsZ
   projectKey = unbitsZ . projectKey
 
 instance HasTrie Word where
   type BaseTrie Word = BaseTrie (Bool, [Bool])
-  embedKey = embedKey . bitsZ 
+  embedKey = embedKey . bitsZ
   projectKey = unbitsZ . projectKey
 instance HasTrie Word8 where
   type BaseTrie Word8 = BaseTrie (Bool, [Bool])
-  embedKey = embedKey . bitsZ 
+  embedKey = embedKey . bitsZ
   projectKey = unbitsZ . projectKey
 instance HasTrie Word16 where
   type BaseTrie Word16 = BaseTrie (Bool, [Bool])
-  embedKey = embedKey . bitsZ 
+  embedKey = embedKey . bitsZ
   projectKey = unbitsZ . projectKey
 instance HasTrie Word32 where
   type BaseTrie Word32 = BaseTrie (Bool, [Bool])
-  embedKey = embedKey . bitsZ 
+  embedKey = embedKey . bitsZ
   projectKey = unbitsZ . projectKey
 instance HasTrie Word64 where
   type BaseTrie Word64 = BaseTrie (Bool, [Bool])
-  embedKey = embedKey . bitsZ 
+  embedKey = embedKey . bitsZ
   projectKey = unbitsZ . projectKey
 
 -- TODO: fix tree to 21 bit depth
