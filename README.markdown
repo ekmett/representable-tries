@@ -1,7 +1,7 @@
 representable-tries
 ===================
 
-[![Hackage](https://img.shields.io/hackage/v/representable-functors.svg)](https://hackage.haskell.org/package/representable-functors) [![Build Status](https://secure.travis-ci.org/ekmett/representable-functors.png?branch=master)](http://travis-ci.org/ekmett/representable-functors
+[![Hackage](https://img.shields.io/hackage/v/representable-functors.svg)](https://hackage.haskell.org/package/representable-functors) [![Build Status](https://secure.travis-ci.org/ekmett/representable-functors.png?branch=master)](http://travis-ci.org/ekmett/representable-functors)
 
 This package provides a simple function memoization scheme based on the notion of representable functors.
 
